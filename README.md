@@ -1,4 +1,4 @@
-# Cosmos Validator Galaxy Explorer 🌌
+#  Validator Galaxy Explorer 🌌
 
 Visualisasi 3D interaktif dari jaringan validator blockchain Cosmos seperti Cosmos Hub, Osmosis, Stargaze, dan lainnya. Proyek ini menampilkan node validator sebagai planet yang mengorbit pusat (chain) dalam tampilan galaksi dengan animasi real-time dan interaksi pengguna.
 
