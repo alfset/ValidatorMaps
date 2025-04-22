@@ -5,7 +5,7 @@ import { useRef } from 'react';
 
 type ValidatorPlanetProps = {
   orbitRadius: number;
-  orbitSpeed: number; // radians per second
+  orbitSpeed: number; 
   size: number;
   name: string;
   power: number;

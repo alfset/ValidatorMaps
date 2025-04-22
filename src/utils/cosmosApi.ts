@@ -1,4 +1,3 @@
-// utils/cosmosApi.ts
 export const fetchValidatorsFromChain = async (baseUrl: string, denom: string) => {
   try {
     const response = await fetch(`${baseUrl}/cosmos/staking/v1beta1/validators??status=BOND_STATUS_BONDED`);

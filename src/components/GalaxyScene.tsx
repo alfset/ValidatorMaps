@@ -42,7 +42,7 @@ export default function GalaxyScene() {
   const [selectedValidator, setSelectedValidator] = useState<Validator | null>(null);
   const maxOrbitRadius = 180;  
   const baseOrbitRadius = 40; 
-  const orbitSpacing = 20;     // sebelumnya 10
+  const orbitSpacing = 20;    
 
   const projectPos = new THREE.Vector3(0, 0, 0);
 
@@ -72,7 +72,6 @@ export default function GalaxyScene() {
       const sorted = data.sort((a, b) => parseFloat(b.tokens) - parseFloat(a.tokens));
       setValidators(sorted);
 
-      // Size lebih besar (multiplier 1.5 dan max 6)
       sizes.current = sorted.map((v) => Math.min(Math.log10(parseFloat(v.tokens) / 1e18 + 1) * 1.5, 6));
 
       orbitRadii.current = sizes.current.map((size, i) =>
@@ -135,7 +134,6 @@ export default function GalaxyScene() {
 
   const currentChain = chains.find(c => c.key === selectedChainKey);
 
-  // Kamera zoom out agar semua planet terlihat
   const initialCameraPosition = [0, maxOrbitRadius * 1.2, maxOrbitRadius * 1.5] as [number, number, number];
 
   return (
