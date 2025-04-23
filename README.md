@@ -47,7 +47,5 @@ npm run dev
 
 Buka browser di `http://localhost:3000`
 
-## 📷 Cuplikan
-(sertakan screenshot atau GIF interaktif di sini)
 
 ---
