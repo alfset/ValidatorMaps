@@ -9,8 +9,6 @@ Dibangun menggunakan **React**, **@react-three/fiber**, dan **drei**, proyek ini
 - 🌍 Representasi validator sebagai planet dengan ukuran dan warna dinamis berdasarkan jumlah token.
 - 🔄 Orbit animasi dan garis koneksi acak antara validator dan pusat.
 - 🔎 Info validator & blok terbaru secara real-time dari API masing-masing chain.
-- 🛰️ Pilihan chain (Cosmos Hub, Osmosis, Stargaze, Planq, Akash).
-- ✨ Background bintang dan antarmuka bergaya sci-fi.
 
 ## 📦 Teknologi
 - React + Typescript
@@ -18,13 +16,6 @@ Dibangun menggunakan **React**, **@react-three/fiber**, dan **drei**, proyek ini
 - @react-three/drei (HTML overlay, Stars, OrbitControls)
 - REST API Cosmos (via Cosmos Directory, dll)
 
-## 📄 Struktur Komponen
-
-- `GalaxyScene.tsx` – Komponen utama yang memuat seluruh tampilan 3D dan interaksi.
-- `ValidatorPlanet.tsx` – Komponen planet individual yang mewakili validator.
-- `AnimatedConnectionLine.tsx` – Animasi garis koneksi validator ke pusat.
-- `cosmosApi.ts` – Ambil data validator dari berbagai chain.
-- `fetchLatestBlock.ts` – Ambil informasi blok terbaru untuk chain yang dipilih.
 
 ## 📝 TODO
 
