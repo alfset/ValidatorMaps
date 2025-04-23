@@ -1,6 +1,6 @@
 export const fetchValidatorsFromChain = async (baseUrl: string, denom: string) => {
   try {
-    const response = await fetch(`${baseUrl}/cosmos/staking/v1beta1/validators??status=BOND_STATUS_BONDED`);
+    const response = await fetch(`${baseUrl}/cosmos/staking/v1beta1/validators?status=BOND_STATUS_BONDED&pagination.limit=30000`);
     const data = await response.json();
     if (!data.validators) {
       throw new Error("Validators not found.");
