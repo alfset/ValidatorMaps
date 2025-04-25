@@ -1,12 +1,14 @@
 'use client';
 
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Stars, Html } from '@react-three/drei'; 
 import ValidatorPlanet from './ValidatorPlanet';
 import AnimatedConnectionLine from './AnimatedConnectionLine';
 import { fetchValidatorsFromChain } from '../utils/cosmosApi'; 
 import { fetchLatestBlockFromChain } from '../utils/fetchLatestBlock'; 
+import WalletConnect from './WalletConnect';
 import { useEffect, useState, useRef } from 'react';
+import StakeModal from './StakeModals';
 import * as THREE from 'three';
 
 type Validator = {
@@ -22,6 +24,15 @@ type BlockInfo = {
   block_height: number;
   proposer_moniker: string;
   block_time: string;
+};
+
+const keplrChainIds: Record<string, string> = {
+  cosmoshub: 'cosmoshub-4',
+  osmosis: 'osmosis-1',
+  planq: 'planq_7070-2',
+  stargaze: 'stargaze-1',
+  Akash: 'akashnet-2',
+  Crossfi: 'crossfi-mainnet-1',
 };
 
 const chains = [
@@ -40,10 +51,15 @@ export default function GalaxyScene() {
   const [selectedChainKey, setSelectedChainKey] = useState(chains[0].key);
   const [validators, setValidators] = useState<Validator[]>([]);
   const [blockInfo, setBlockInfo] = useState<BlockInfo | null>(null);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const [selectedValidator, setSelectedValidator] = useState<Validator | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const sunTexture = useLoader(THREE.TextureLoader, '/textures/sun.jpg');
   const top10Validators = validators.slice(0, 10);
-  const [decentralization, setDecentralization] = useState<number>(0);
   const last10Validators = validators.slice(-10);
+  const [decentralization, setDecentralization] = useState<number>(0);
+
   const projectPos = new THREE.Vector3(0, 0, 0);
   const planetPositions = useRef<THREE.Vector3[]>([]);
   const phaseOffsets = useRef<number[]>([]);
@@ -142,101 +158,135 @@ export default function GalaxyScene() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', backgroundColor: 'black', overflow: 'hidden', position: 'relative' }}>
-      <div style={{
-        width: 320,
-        backgroundColor: 'rgba(20, 20, 20, 0.95)',
-        color: 'white',
-        fontFamily: 'monospace',
-        padding: 20,
-        overflowY: 'auto',
-        userSelect: 'none',
-      }}>
-        <h2 style={{ marginBottom: 16 }}>Select Chain</h2>
-        <select
-          value={selectedChainKey}
-          onChange={e => setSelectedChainKey(e.target.value)}
+      
+      {!sidebarOpen && (
+        <button
+          onClick={() => setSidebarOpen(true)}
           style={{
-            width: '100%',
-            padding: '8px 12px',
-            marginBottom: 20,
+            position: 'absolute',
+            left: 0,
+            top: 20,
+            zIndex: 10,
             backgroundColor: '#222',
             color: 'white',
             border: '1px solid #555',
-            borderRadius: 4,
-            fontFamily: 'monospace',
+            padding: '8px 12px',
             cursor: 'pointer',
           }}
         >
-          {chains.map(chain => (
-            <option key={chain.key} value={chain.key}>
-              {chain.name}
-            </option>
-          ))}
-        </select>
+          ▶ Open Panel
+        </button>
+      )}
 
-        {blockInfo && (
-          <>
-            <div style={{ marginBottom: 20 }}>
-              <b>Last Block:</b> {blockInfo.block_height}
-            </div>
-            <div style={{ marginBottom: 20 }}>
-              <b>Proposer:</b> {blockInfo.proposer_moniker}
-            </div>
-          </>
-        )}
-
-        <div style={{ marginBottom: 20 }}>
-          <b>Active Set Validators:</b> {validators.length}
-        </div>
-        <div style={{ marginBottom: 20 }}>
-        <h3>Decentralization Score</h3>
-        <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
-          {decentralization.toFixed(2)}
-        </div>
-        <div style={{ color: '#888' }}>Higher values indicate more centralization</div>
-        </div>
-
-        <h2 style={{ marginBottom: 16 }}>Validator Info</h2>
-        {selectedValidator ? (
-          <>
-            <div><b>Moniker:</b> {shorten(selectedValidator.description.moniker, 10)}</div>
-            <div><b>Address:</b> {shorten(selectedValidator.operator_address)}</div>
-            <div><b>Tokens:</b> {formatTokens(selectedValidator.tokens, selectedValidator.denom)}</div>
-          </>
-        ) : (
-          <div>Select a validator planet to see details</div>
-        )}
-
-        <hr style={{ margin: '20px 0', borderColor: '#444' }} />
+      {sidebarOpen && (
+        <div style={{
+          width: 300,
+          backgroundColor: 'rgba(20, 20, 20, 0.95)',
+          color: 'white',
+          fontFamily: 'monospace',
+          padding: 20,
+          overflowY: 'auto',
+          userSelect: 'none',
+          position: 'relative',
+          zIndex: 5,
+        }}>
         
-        <h2 style={{ marginBottom: 8 }}>Select Top 10 Validators</h2>
-        <select
-          onChange={(e) => setSelectedValidator(validators.find(v => v.operator_address === e.target.value) || null)}
-          style={{ width: '100%', padding: '8px 12px', backgroundColor: '#222', color: 'white', border: '1px solid #555', borderRadius: 4 }}
-        >
-          {top10Validators.map(v => (
-            <option key={v.operator_address} value={v.operator_address}>
-              {shorten(v.description.moniker, 10)} - {formatTokens(v.tokens, v.denom)}
-            </option>
-          ))}
-        </select>
+          <WalletConnect selectedChainKey={selectedChainKey} onConnected={setWalletAddress} />
+          {walletAddress && (
+            <div style={{ marginBottom: 20 }}>
+              <b>Wallet:</b> {shorten(walletAddress, 8)}
+            </div>
+          )}
+          <h2>Select Chain</h2>
+          <select
+            value={selectedChainKey}
+            onChange={e => setSelectedChainKey(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              marginBottom: 20,
+              backgroundColor: '#222',
+              color: 'white',
+              border: '1px solid #555',
+              borderRadius: 4,
+              fontFamily: 'monospace',
+              cursor: 'pointer',
+            }}
+          >
+            {chains.map(chain => (
+              <option key={chain.key} value={chain.key}>
+                {chain.name}
+              </option>
+            ))}
+          </select>
 
-        <hr style={{ margin: '20px 0', borderColor: '#444' }} />
+          {blockInfo && (
+            <>
+              <div><b>Last Block:</b> {blockInfo.block_height}</div>
+              <div><b>Proposer:</b> {blockInfo.proposer_moniker}</div>
+            </>
+          )}
 
-        <h2 style={{ marginBottom: 8 }}>Select Last 10 Validators</h2>
-        <select
-          onChange={(e) => setSelectedValidator(validators.find(v => v.operator_address === e.target.value) || null)}
-          style={{ width: '100%', padding: '8px 12px', backgroundColor: '#222', color: 'white', border: '1px solid #555', borderRadius: 4 }}
-        >
-          {last10Validators.map(v => (
-            <option key={v.operator_address} value={v.operator_address}>
-              {shorten(v.description.moniker, 10)} - {formatTokens(v.tokens, v.denom)}
-            </option>
-          ))}
-        </select>
-      </div>
+          <div style={{ marginTop: 20 }}>
+            <b>Validators:</b> {validators.length}
+            <div style={{ marginTop: 10 }}>
+              <h3>Decentralization Score</h3>
+              <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{decentralization.toFixed(2)}</div>
+              <div style={{ color: '#888' }}>Higher = More centralized</div>
+            </div>
+          </div>
 
-      <div style={{ flex: 1 }}>
+          <h2 style={{ marginTop: 20 }}>Validator Info</h2>
+          {selectedValidator ? (
+            <>
+              <div><b>Moniker:</b> {shorten(selectedValidator.description.moniker, 10)}</div>
+              <div><b>Address:</b> {shorten(selectedValidator.operator_address)}</div>
+              <div><b>Tokens:</b> {formatTokens(selectedValidator.tokens, selectedValidator.denom)}</div>
+            </>
+          ) : (
+            <div>Select a planet to view validator info</div>
+          )}
+
+          <h3 style={{ marginTop: 20 }}>Top 10 Validators</h3>
+          <select
+            onChange={(e) => setSelectedValidator(validators.find(v => v.operator_address === e.target.value) || null)}
+            style={{ width: '100%', padding: '8px 12px', marginBottom: 10, backgroundColor: '#222', color: 'white', border: '1px solid #555', borderRadius: 4 }}
+          >
+            {top10Validators.map(v => (
+              <option key={v.operator_address} value={v.operator_address}>
+                {shorten(v.description.moniker, 10)} - {formatTokens(v.tokens, v.denom)}
+              </option>
+            ))}
+          </select>
+
+          <h3>Last 10 Validators</h3>
+          <select
+            onChange={(e) => setSelectedValidator(validators.find(v => v.operator_address === e.target.value) || null)}
+            style={{ width: '100%', padding: '8px 12px', backgroundColor: '#222', color: 'white', border: '1px solid #555', borderRadius: 4 }}
+          >
+            {last10Validators.map(v => (
+              <option key={v.operator_address} value={v.operator_address}>
+                {shorten(v.description.moniker, 10)} - {formatTokens(v.tokens, v.denom)}
+              </option>
+            ))}
+          </select>
+
+          {showModal && selectedValidator && walletAddress && (
+            <div style={{ marginTop: 20 }}>
+              <StakeModal
+                validatorAddress={selectedValidator.operator_address}
+                validatorMoniker={selectedValidator.description.moniker}
+                chainId={keplrChainIds[selectedChainKey]}
+                denom={selectedValidator.denom}
+                walletAddress={walletAddress}
+                onClose={() => setShowModal(false)}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ flex: 1, transition: 'width 0.3s ease' }}>
         <Canvas camera={{ position: initialCameraPosition, fov: 60 }} style={{ background: 'black', width: '100%', height: '100%' }}>
           <ambientLight intensity={0.5} />
           <pointLight position={[0, 50, 50]} />
@@ -244,7 +294,13 @@ export default function GalaxyScene() {
 
           <mesh position={projectPos}>
             <sphereGeometry args={[15, 64, 64]} />
-            <meshStandardMaterial color={'#ffcc33'} emissive={'#ffaa00'} metalness={10} roughness={1} />
+            <meshStandardMaterial
+              map={sunTexture}
+              emissive={'#ffaa00'}
+              emissiveIntensity={2}
+              metalness={1}
+              roughness={0.1}
+            />
           </mesh>
 
           <Html position={projectPos} center>
@@ -261,6 +317,9 @@ export default function GalaxyScene() {
               emissive: `hsl(${(i * 137.5) % 360}, 100%, 40%)`,
             };
             const pos = planetPositions.current[i];
+            
+            const randomTextureId = (i % 10) + 1; // to ensure 1 to 10 cycling
+            const planetTexture = `/textures/${randomTextureId}.jpg`;
 
             return (
               <ValidatorPlanet
@@ -271,13 +330,18 @@ export default function GalaxyScene() {
                 name={validator.description.moniker}
                 power={power}
                 color={color}
+                textureUrl={planetTexture}
                 phaseOffset={phaseOffsets.current[i]}
                 active={selectedValidator?.operator_address === validator.operator_address}
-                onClick={() => setSelectedValidator(validator)}
+                onClick={() => {
+                  setSelectedValidator(validator);
+                  if (walletAddress) setShowModal(true);
+                }}
                 position={pos}
               />
             );
           })}
+
 
           {activeConnectionIndex !== null && planetPositions.current[activeConnectionIndex] && (
             <AnimatedConnectionLine

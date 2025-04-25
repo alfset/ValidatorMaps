@@ -1,4 +1,4 @@
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useLoader } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useRef } from 'react';
@@ -13,6 +13,8 @@ type ValidatorPlanetProps = {
   color: { color: string; emissive: string };
   phaseOffset: number;
   onClick: () => void;
+  textureUrl: string;
+  position: THREE.Vector3;
 };
 
 export default function ValidatorPlanet({
@@ -25,8 +27,11 @@ export default function ValidatorPlanet({
   color,
   phaseOffset,
   onClick,
+  textureUrl,
+  position,
 }: ValidatorPlanetProps) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const texture = useLoader(THREE.TextureLoader, textureUrl);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
@@ -50,25 +55,27 @@ export default function ValidatorPlanet({
       castShadow
       receiveShadow
     >
-      <sphereGeometry args={[1, 32, 32]} />
+      <sphereGeometry args={[1, 15, 15]} />
       <meshStandardMaterial
-        color={color.color}
-        emissive={active ? color.emissive : 'black'}
-        metalness={0.8}
-        roughness={0.2}
+        map={texture}
+        emissive={active ? 'magenta' : color.emissive}
+        emissiveIntensity={active ? 0.25 : 0.1}
+        metalness={0.6}
+        roughness={0.3}
       />
 
       <Html position={[0, size + 0.5, 0]} center>
         <div
           style={{
-            color: 'white',
+            color: active ? 'yellow' : 'white',
             fontSize: 12,
+            opacity: active ? 1 : 0.4,
             pointerEvents: 'none',
             userSelect: 'none',
             whiteSpace: 'nowrap',
           }}
         >
-          {name}
+          {name} {active && <span style={{ color: 'lightgreen' }}>● </span>}
         </div>
       </Html>
     </mesh>
